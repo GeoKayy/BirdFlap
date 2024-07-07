@@ -1,7 +1,10 @@
 import pygame
 import random
+from pygame import mixer
 
 pygame.init()
+mixer.init()
+mixer.music.load("bgmusic.mp3")
 birdy = 0
 gap = 100
 gapy = random.randint(100, 1720)
@@ -26,11 +29,18 @@ dead = False
 score = 0
 bird = pygame.image.load("actualbird.png")
 birdflip = pygame.image.load("birdflip.png")
+birdflipflap = pygame.image.load("birdflipflap.png")
+birdflap = pygame.image.load("birdflap.png")
 logo = pygame.image.load("wing.png")
 pygame.display.set_icon(logo)
 pygame.display.set_caption("Bird Flap")
 numFont = pygame.font.SysFont("twcen", 200)
 pointsdisplay = numFont.render(str(score), 1, (255, 255, 255))
+flap = False
+cd = 0
+extraspeed = 0
+mixer.music.set_volume(0.5)
+pygame.mixer.music.play(-1)
 
 while True:
     for event in pygame.event.get():
@@ -38,6 +48,8 @@ while True:
             pygame.quit()
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mdown = True
+            flap = True
+            cd = 15
         elif event.type == pygame.MOUSEBUTTONUP:
             mdown = False
 
@@ -63,15 +75,18 @@ while True:
         dead = True
         
     if boxx >= 836:
-        boxxx = -10
+        boxxx = -10 - extraspeed
         respawnr = True
         score += 1
         
     elif boxx <= 0:
-        boxxx = 10
+        boxxx = 10 + extraspeed
         respawnl = True
         score += 1
-        
+
+    if extraspeed < 10:
+        extraspeed += 0.003
+
     if respawnr:
         spikesr = []
         for i in range(9):
@@ -117,16 +132,29 @@ while True:
         spikesr = []
         spikesl = []
         score = 0
+        extraspeed = 0
 
     if score < 10:
         screen.blit(pointsdisplay, (390, 350))
     else:
         screen.blit(pointsdisplay, (360, 350))
 
-    if boxxx == 10:
-        screen.blit(bird, (boxx, boxy))
+    if cd >= 0:
+        cd -= 1
     else:
-        screen.blit(birdflip, (boxx, boxy))
+        flap = False
+
+    if boxxx >= 0:
+        if flap:
+            screen.blit(birdflap, (boxx, boxy))
+        else:
+            screen.blit(bird, (boxx, boxy))
+    else:
+        if flap:
+            screen.blit(birdflipflap, (boxx, boxy))
+        else:
+            screen.blit(birdflip, (boxx, boxy))
+            
     pygame.draw.rect(screen, (255, 0, 0), (0, 877.5, 900, 23))
     pygame.draw.rect(screen, (255, 0, 0), (0, 0, 900, 23))
     pygame.display.flip()
